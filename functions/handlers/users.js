@@ -6,6 +6,7 @@ const {
     loginValidation,
     reduceUserDetails,
 } = require("../utils/validators");
+const { response } = require("express");
 const storageUrl = "https://firebasestorage.googleapis.com/v0/b";
 
 firebase.initializeApp(config);
@@ -70,7 +71,9 @@ exports.signUp = (request, response) => {
                     .status(400)
                     .json({ email: "Email is already registered." });
             } else {
-                return response.status(500).json({ error: error.code });
+                return response.status(500).json({
+                    general: "Something went wrong, please try again.",
+                });
             }
         });
 };
@@ -129,6 +132,63 @@ exports.addUserDetails = (request, response) => {
         });
 };
 
+exports.getUserDetails = (request, response) => {
+    let userData = {};
+    db.doc(`/users/${request.params.handle}`)
+        .get()
+        .then((doc) => {
+            if (doc.exists) {
+                userData.user = doc.data();
+
+                return db
+                    .collection("screams")
+                    .where("userHandle", "==", request.params.handle)
+                    .orderBy("createdAt", "desc")
+                    .get();
+            } else {
+                return response.status(404).json({ error: "User not found." });
+            }
+        })
+        .then((data) => {
+            userData.screams = [];
+            data.forEach((doc) => {
+                userData.screams.push({
+                    screamId: doc.id,
+                    body: doc.data().body,
+                    userHandle: doc.data().userHandle,
+                    userImage: doc.data().userImage,
+                    likeCount: doc.data().likeCount,
+                    commentCount: doc.data().commentCount,
+                    createdAt: doc.data().createdAt,
+                });
+            });
+            return response.json(userData);
+        })
+        .catch((error) => {
+            console.error(error);
+            return response.status(400).json({ error: error.code });
+        });
+};
+
+exports.markNotificationsRead = (request, response) => {
+    let batch = db.batch();
+
+    request.body.forEach((notificationId) => {
+        const notification = db.doc(`/notifications/${notificationId}`);
+        batch.update(notification, { read: true });
+    });
+
+    batch
+        .commit()
+        .then(() => {
+            return response.json({ message: "Notifications marked read." });
+        })
+        .catch((error) => {
+            console.error(error);
+            return response.status(500).json({ error: error.code });
+        });
+};
+
 // Get current user details
 
 exports.getAuthenticatedUser = (request, response) => {
@@ -149,6 +209,26 @@ exports.getAuthenticatedUser = (request, response) => {
             userData.likes = [];
             data.forEach((doc) => {
                 userData.likes.push(doc.data());
+            });
+            return db
+                .collection("notifications")
+                .where("recipient", "==", request.user.handle)
+                .orderBy("createdAt", "desc")
+                .limit(10)
+                .get();
+        })
+        .then((data) => {
+            userData.notifications = [];
+            data.forEach((doc) => {
+                userData.notifications.push({
+                    notificationId: doc.id,
+                    recipient: doc.data().recipient,
+                    sender: doc.data().sender,
+                    screamId: doc.data().screamId,
+                    type: doc.data().type,
+                    read: doc.data().read,
+                    createdAt: doc.data().createdAt,
+                });
             });
             return response.json(userData);
         })

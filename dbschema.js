@@ -7,6 +7,16 @@ let db = {
             createdAt: "2021-01-13T10:47:08.753Z",
         },
     ],
+    notifications: [
+        {
+            recipient: "user",
+            sender: "user2",
+            screamId: "S6S4gNpR46a4",
+            read: "true | false",
+            type: "like | comment",
+            createdAt: "2020-01-12T12:00:00:001Z",
+        },
+    ],
     screams: [
         {
             userHandle: "user",
