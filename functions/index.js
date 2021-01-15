@@ -2,33 +2,36 @@ const functions = require("firebase-functions");
 const app = require("express")();
 const { db } = require("./utils/admin");
 
+const cors = require("cors");
+app.use(cors());
+
 const {
-    getAllScreams,
-    postOneScream,
-    getScream,
-    commentOnScream,
-    likeScream,
-    unlikeScream,
-    deleteScream,
+	getAllScreams,
+	postOneScream,
+	getScream,
+	commentOnScream,
+	likeScream,
+	unlikeScream,
+	deleteScream,
 } = require("./handlers/screams");
 const {
-    signUp,
-    login,
-    getAuthenticatedUser,
-    addUserDetails,
-    uploadImage,
-    getUserDetails,
-    markNotificationsRead,
+	signUp,
+	login,
+	getAuthenticatedUser,
+	addUserDetails,
+	uploadImage,
+	getUserDetails,
+	markNotificationsRead,
 } = require("./handlers/users");
 
 const fbAuth = require("./utils/fbAuth");
 
 const {
-    createNotificationOnLike,
-    deleteNotificationOnUnlike,
-    createNotificationOnComment,
-    onUserImageChange,
-    onScreamDelete,
+	createNotificationOnLike,
+	deleteNotificationOnUnlike,
+	createNotificationOnComment,
+	onUserImageChange,
+	onScreamDelete,
 } = require("./handlers/triggers");
 
 // Screams routes
